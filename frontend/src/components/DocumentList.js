@@ -3,6 +3,22 @@
  */
 import React, { useState } from 'react';
 import { documentsAPI } from '../api';
+import { 
+  Download, 
+  Trash2, 
+  FileText, 
+  Image, 
+  Calendar, 
+  HardDrive, 
+  RefreshCw,
+  FolderOpen,
+  Eye,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  File,
+  Tag
+} from 'lucide-react';
 
 const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
   const [deletingId, setDeletingId] = useState(null);
@@ -57,276 +73,201 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      invoice: '#3b82f6',
-      medical: '#ef4444',
-      insurance: '#8b5cf6',
-      tax: '#f59e0b',
-      financial: '#10b981',
-      warranty: '#6366f1',
-      utility: '#f97316',
-      legal: '#64748b',
-      employment: '#06b6d4',
-      automotive: '#84cc16',
-      real_estate: '#ec4899',
-      subscription: '#14b8a6',
-      government: '#7c3aed',
-      business: '#dc2626',
-      travel: '#2563eb',
-      education: '#059669',
-      personal: '#9333ea',
-      other: '#6b7280',
+  const getFileIcon = (filename, contentType) => {
+    const extension = filename.toLowerCase().split('.').pop();
+    
+    if (contentType?.includes('image') || ['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+      return <Image className="w-6 h-6 text-blue-500" />;
+    }
+    
+    switch (extension) {
+      case 'pdf':
+        return <FileText className="w-6 h-6 text-red-500" />;
+      case 'doc':
+      case 'docx':
+        return <FileText className="w-6 h-6 text-blue-600" />;
+      default:
+        return <File className="w-6 h-6 text-gray-500" />;
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'failed':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const getCategoryStyle = (category) => {
+    const styles = {
+      invoice: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200',
+      medical: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200',
+      insurance: 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200',
+      tax: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200',
+      financial: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200',
+      warranty: 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-200',
+      utility: 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200',
+      legal: 'bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200',
+      employment: 'bg-cyan-100 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-200',
+      automotive: 'bg-lime-100 dark:bg-lime-900/20 text-lime-800 dark:text-lime-200',
+      real_estate: 'bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-200',
+      subscription: 'bg-teal-100 dark:bg-teal-900/20 text-teal-800 dark:text-teal-200',
+      government: 'bg-violet-100 dark:bg-violet-900/20 text-violet-800 dark:text-violet-200',
+      business: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200',
+      travel: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200',
+      education: 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200',
+      personal: 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200',
+      other: 'bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200',
     };
-    return colors[category] || '#6b7280';
+    return styles[category] || styles.other;
   };
 
   if (documents.length === 0) {
     return (
-      <div style={styles.emptyState}>
-        <div style={styles.emptyIcon}>📂</div>
-        <h3 style={styles.emptyTitle}>No documents yet</h3>
-        <p style={styles.emptySubtitle}>
-          Upload your first document to get started organizing your files
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-6">
+          <FolderOpen className="w-12 h-12 text-gray-400" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          No documents yet
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
+          Upload your first document to get started organizing your files with AI-powered categorization
         </p>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h3 style={styles.title}>Your Documents ({documents.length})</h3>
-        <button onClick={onRefresh} style={styles.refreshButton}>
-          🔄 Refresh
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+          <FileText className="w-6 h-6 mr-2" />
+          Your Documents ({documents.length})
+        </h3>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRefresh();
+          }}
+          style={{ pointerEvents: 'auto', zIndex: 10 }}
+          className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors cursor-pointer"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Refresh</span>
         </button>
       </div>
 
-      <div style={styles.grid}>
-        {documents.map((doc) => (
-          <div key={doc.id} style={styles.card}>
-            <div style={styles.cardHeader}>
-              <div 
-                style={{
-                  ...styles.categoryBadge,
-                  backgroundColor: getCategoryColor(doc.category),
-                }}
-              >
-                {doc.category}
-              </div>
-              <div style={styles.cardActions}>
-                <button
-                  onClick={() => handleDownload(doc.id, doc.original_filename)}
-                  style={styles.actionButton}
-                  title="Download"
-                >
-                  ⬇️
-                </button>
-                <button
-                  onClick={() => handleDelete(doc.id)}
-                  style={styles.deleteButton}
-                  disabled={deletingId === doc.id}
-                  title="Delete"
-                >
-                  {deletingId === doc.id ? '⏳' : '🗑️'}
-                </button>
-              </div>
-            </div>
-
-            <div style={styles.cardBody}>
-              <h4 style={styles.filename}>{doc.original_filename}</h4>
-              <div style={styles.details}>
-                <span style={styles.detail}>
-                  📅 {formatDate(doc.upload_date)}
-                </span>
-                <span style={styles.detail}>
-                  📏 {formatFileSize(doc.file_size)}
-                </span>
-                <span style={styles.detail}>
-                  📋 {doc.content_type}
-                </span>
+      {/* Document Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-6">
+        {documents.map((doc, index) => (
+          <div 
+            key={doc.id} 
+            className="card p-6 card-hover animate-slide-up"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            {/* Card Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                {getFileIcon(doc.original_filename, doc.content_type)}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white truncate">
+                    {doc.original_filename}
+                  </h4>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryStyle(doc.category)}`}>
+                      <Tag className="w-3 h-3 mr-1" />
+                      {doc.category}
+                    </span>
+                    {doc.processing_status && (
+                      <div className="flex items-center space-x-1">
+                        {getStatusIcon(doc.processing_status)}
+                        <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                          {doc.processing_status}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
-              {doc.processing_status && (
-                <div style={styles.statusContainer}>
-                  <span 
-                    style={{
-                      ...styles.status,
-                      ...(doc.processing_status === 'completed' ? styles.statusCompleted :
-                          doc.processing_status === 'failed' ? styles.statusFailed :
-                          styles.statusPending)
-                    }}
-                  >
-                    {doc.processing_status === 'completed' ? '✅' : 
-                     doc.processing_status === 'failed' ? '❌' : '⏳'} 
-                    {doc.processing_status}
+              {/* Actions */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDownload(doc.id, doc.original_filename);
+                  }}
+                  style={{ pointerEvents: 'auto', zIndex: 10 }}
+                  className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors cursor-pointer"
+                  title="Download document"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDelete(doc.id);
+                  }}
+                  disabled={deletingId === doc.id}
+                  style={{ pointerEvents: 'auto', zIndex: 10 }}
+                  className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                  title="Delete document"
+                >
+                  {deletingId === doc.id ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Document Details */}
+            <div className="grid grid-cols-3 gap-4 py-3 border-t border-gray-200 dark:border-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <Calendar className="w-4 h-4" />
+                <span>{formatDate(doc.upload_date)}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <HardDrive className="w-4 h-4" />
+                <span>{formatFileSize(doc.file_size)}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <FileText className="w-4 h-4" />
+                <span className="truncate">{doc.content_type}</span>
+              </div>
+            </div>
+
+            {/* Document Preview */}
+            {doc.extracted_text && (
+              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Eye className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Document Preview
                   </span>
                 </div>
-              )}
-
-              {doc.extracted_text && (
-                <div style={styles.preview}>
-                  <p style={styles.previewText}>
-                    {doc.extracted_text.substring(0, 100)}...
-                  </p>
-                </div>
-              )}
-            </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 italic leading-relaxed">
+                  "{doc.extracted_text.substring(0, 120)}..."
+                </p>
+              </div>
+            )}
           </div>
         ))}
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    margin: '24px 0',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '16px',
-  },
-  title: {
-    margin: 0,
-    color: '#1f2937',
-    fontSize: '20px',
-    fontWeight: '600',
-  },
-  refreshButton: {
-    padding: '8px 16px',
-    background: '#f3f4f6',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '16px',
-  },
-  card: {
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    padding: '16px',
-    backgroundColor: 'white',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '12px',
-  },
-  categoryBadge: {
-    padding: '4px 8px',
-    borderRadius: '4px',
-    color: 'white',
-    fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'capitalize',
-  },
-  cardActions: {
-    display: 'flex',
-    gap: '4px',
-  },
-  actionButton: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '4px',
-    borderRadius: '4px',
-    fontSize: '16px',
-  },
-  deleteButton: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '4px',
-    borderRadius: '4px',
-    fontSize: '16px',
-  },
-  cardBody: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  filename: {
-    margin: 0,
-    fontSize: '16px',
-    fontWeight: '500',
-    color: '#1f2937',
-    wordBreak: 'break-word',
-  },
-  details: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  detail: {
-    fontSize: '12px',
-    color: '#6b7280',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-  },
-  statusContainer: {
-    marginTop: '8px',
-  },
-  status: {
-    padding: '2px 6px',
-    borderRadius: '4px',
-    fontSize: '11px',
-    fontWeight: '500',
-    textTransform: 'capitalize',
-  },
-  statusCompleted: {
-    backgroundColor: '#d1fae5',
-    color: '#065f46',
-  },
-  statusFailed: {
-    backgroundColor: '#fee2e2',
-    color: '#991b1b',
-  },
-  statusPending: {
-    backgroundColor: '#fef3c7',
-    color: '#92400e',
-  },
-  preview: {
-    marginTop: '8px',
-    padding: '8px',
-    backgroundColor: '#f9fafb',
-    borderRadius: '4px',
-    border: '1px solid #e5e7eb',
-  },
-  previewText: {
-    margin: 0,
-    fontSize: '12px',
-    color: '#4b5563',
-    fontStyle: 'italic',
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    color: '#6b7280',
-  },
-  emptyIcon: {
-    fontSize: '64px',
-    marginBottom: '16px',
-  },
-  emptyTitle: {
-    margin: '0 0 8px 0',
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  emptySubtitle: {
-    margin: 0,
-    fontSize: '16px',
-  },
 };
 
 export default DocumentList;

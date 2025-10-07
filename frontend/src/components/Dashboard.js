@@ -3,13 +3,28 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
+import { useTheme } from '../ThemeContext';
 import { documentsAPI } from '../api';
 import FileUpload from './FileUpload';
 import DocumentList from './DocumentList';
 import SearchBar from './SearchBar';
+import { 
+  FileText, 
+  LogOut, 
+  Moon, 
+  Sun, 
+  RefreshCw, 
+  AlertCircle, 
+  CheckCircle, 
+  BarChart3,
+  Folder,
+  HardDrive,
+  Activity
+} from 'lucide-react';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [documents, setDocuments] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -81,285 +96,230 @@ const Dashboard = () => {
     }
   };
 
+  const stats = {
+    total: documents.length,
+    categories: new Set(documents.map(doc => doc.category)).size,
+    totalSize: Math.round(documents.reduce((sum, doc) => sum + doc.file_size, 0) / 1024 / 1024 * 100) / 100,
+    recent: documents.filter(doc => {
+      const docDate = new Date(doc.created_at);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return docDate > weekAgo;
+    }).length
+  };
+
   const displayDocuments = searchResults ? searchResults.documents : documents;
   const isSearchActive = searchResults !== null;
 
   return (
-    <div style={styles.container}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
       {/* Header */}
-      <header style={styles.header}>
-        <div style={styles.headerContent}>
-          <div style={styles.headerLeft}>
-            <h1 style={styles.title}>📋 Document Organizer</h1>
-            <p style={styles.subtitle}>Welcome back, {user?.username}!</p>
-          </div>
-          <div style={styles.headerRight}>
-            <button onClick={logout} style={styles.logoutButton}>
-              Sign Out
-            </button>
+      <header className="glass-card border-b border-white/20 dark:border-gray-700/20 shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:rotate-3">
+                <FileText className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gradient bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
+                  Document Organizer
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Welcome back, {user?.username}! ✨
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={toggleTheme}
+                className="p-3 rounded-xl bg-white/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80 transition-all duration-300 hover:scale-105 backdrop-blur-sm border border-white/30 dark:border-gray-600/30 shadow-lg hover:shadow-xl"
+                title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+              
+              <button
+                onClick={loadDocuments}
+                className="p-3 rounded-xl bg-white/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80 transition-all duration-300 hover:scale-105 backdrop-blur-sm border border-white/30 dark:border-gray-600/30 shadow-lg hover:shadow-xl disabled:opacity-50"
+                title="Refresh documents"
+                disabled={loading}
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+              
+              <button
+                onClick={logout}
+                className="flex items-center space-x-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:block">Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={styles.main}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Alerts */}
         {error && (
-          <div style={styles.alert.error}>
-            ❌ {error}
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 animate-slide-up">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-400 mr-3" />
+              <p className="text-red-800 dark:text-red-200">{error}</p>
+            </div>
           </div>
         )}
         
         {success && (
-          <div style={styles.alert.success}>
-            ✅ {success}
+          <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 animate-slide-up">
+            <div className="flex items-center">
+              <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+              <p className="text-green-800 dark:text-green-200">{success}</p>
+            </div>
           </div>
         )}
 
-        {/* Upload Section */}
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Upload Documents</h2>
-          <FileUpload
-            onUploadSuccess={handleUploadSuccess}
-            onUploadError={handleUploadError}
-          />
-        </section>
-
-        {/* Search Section */}
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Search Documents</h2>
-            <button
-              onClick={handleProcessPending}
-              style={styles.processButton}
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : 'Process Pending'}
-            </button>
+        {/* Stats Cards */}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="stat-card-primary animate-fade-in hover-lift">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/80 mb-2">Total Documents</p>
+                  <p className="text-3xl font-bold text-white">{stats.total}</p>
+                </div>
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <FileText className="w-8 h-8 text-white" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="stat-card-secondary animate-fade-in hover-lift" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/80 mb-2">Categories</p>
+                  <p className="text-3xl font-bold text-white">{stats.categories}</p>
+                </div>
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <Folder className="w-8 h-8 text-white" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="stat-card-accent animate-fade-in hover-lift" style={{ animationDelay: '200ms' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/80 mb-2">Storage Used</p>
+                  <p className="text-3xl font-bold text-white">{stats.totalSize}MB</p>
+                </div>
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <HardDrive className="w-8 h-8 text-white" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="stat-card-warning animate-fade-in hover-lift" style={{ animationDelay: '300ms' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/80 mb-2">This Week</p>
+                  <p className="text-3xl font-bold text-white">{stats.recent}</p>
+                </div>
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <Activity className="w-8 h-8 text-white" />
+                </div>
+              </div>
+            </div>
           </div>
-          <SearchBar
-            onSearchResults={handleSearchResults}
-            onSearchError={handleSearchError}
-          />
-        </section>
-
-        {/* Documents Section */}
-        <section style={styles.section}>
-          {isSearchActive && (
-            <div style={styles.searchInfo}>
-              <p style={styles.searchInfoText}>
-                Search Results: {searchResults.total} documents found
-                {searchResults.query && ` for "${searchResults.query}"`}
-              </p>
-              <button
-                onClick={() => setSearchResults(null)}
-                style={styles.clearSearchButton}
-              >
-                ← Back to All Documents
-              </button>
-            </div>
-          )}
-
-          {loading ? (
-            <div style={styles.loading}>
-              <div style={styles.spinner}></div>
-              <p>Loading documents...</p>
-            </div>
-          ) : (
-            <DocumentList
-              documents={displayDocuments}
-              onDocumentDeleted={handleDocumentDeleted}
-              onRefresh={loadDocuments}
-            />
-          )}
-        </section>
-
-        {/* Stats Section */}
-        {!loading && !isSearchActive && (
-          <section style={styles.section}>
-            <div style={styles.stats}>
-              <div style={styles.statCard}>
-                <h3 style={styles.statNumber}>{documents.length}</h3>
-                <p style={styles.statLabel}>Total Documents</p>
-              </div>
-              <div style={styles.statCard}>
-                <h3 style={styles.statNumber}>
-                  {new Set(documents.map(doc => doc.category)).size}
-                </h3>
-                <p style={styles.statLabel}>Categories</p>
-              </div>
-              <div style={styles.statCard}>
-                <h3 style={styles.statNumber}>
-                  {Math.round(documents.reduce((sum, doc) => sum + doc.file_size, 0) / 1024 / 1024 * 100) / 100}MB
-                </h3>
-                <p style={styles.statLabel}>Total Size</p>
-              </div>
-            </div>
-          </section>
         )}
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Upload and Search */}
+          <div className="lg:col-span-1 space-y-8">
+            {/* Upload Section */}
+            <section className="card p-6 animate-slide-up">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Upload Documents
+                </h2>
+              </div>
+              <FileUpload
+                onUploadSuccess={handleUploadSuccess}
+                onUploadError={handleUploadError}
+              />
+            </section>
+
+            {/* Search Section */}
+            <section className="card p-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Search Documents
+                </h2>
+                <button
+                  onClick={handleProcessPending}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
+                  disabled={loading}
+                  title="Process pending documents for better search results"
+                >
+                  <Activity className="w-4 h-4" />
+                  <span>{loading ? 'Processing...' : 'Process Pending'}</span>
+                </button>
+              </div>
+              <SearchBar
+                onSearchResults={handleSearchResults}
+                onSearchError={handleSearchError}
+              />
+            </section>
+          </div>
+
+          {/* Right Column - Documents */}
+          <div className="lg:col-span-2">
+            <section className="card p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
+              {isSearchActive && (
+                <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
+                      <p className="text-blue-800 dark:text-blue-200 font-medium">
+                        Search Results: {searchResults.total} documents found
+                        {searchResults.query && ` for "${searchResults.query}"`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSearchResults(null);
+                      }}
+                      style={{ pointerEvents: 'auto', zIndex: 10 }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors cursor-pointer"
+                    >
+                      ← All Documents
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full spin mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">Loading documents...</p>
+                </div>
+              ) : (
+                <DocumentList
+                  documents={displayDocuments}
+                  onDocumentDeleted={handleDocumentDeleted}
+                  onRefresh={loadDocuments}
+                />
+              )}
+            </section>
+          </div>
+        </div>
       </main>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    backgroundColor: 'white',
-    borderBottom: '1px solid #e5e7eb',
-    padding: '16px 0',
-  },
-  headerContent: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  title: {
-    margin: 0,
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  subtitle: {
-    margin: '4px 0 0 0',
-    color: '#6b7280',
-    fontSize: '14px',
-  },
-  logoutButton: {
-    padding: '8px 16px',
-    background: '#ef4444',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-  },
-  main: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '24px',
-  },
-  section: {
-    marginBottom: '32px',
-  },
-  sectionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '16px',
-  },
-  sectionTitle: {
-    margin: 0,
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  processButton: {
-    padding: '8px 16px',
-    background: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-  },
-  alert: {
-    error: {
-      padding: '12px 16px',
-      backgroundColor: '#fef2f2',
-      border: '1px solid #fecaca',
-      borderRadius: '6px',
-      color: '#dc2626',
-      marginBottom: '16px',
-    },
-    success: {
-      padding: '12px 16px',
-      backgroundColor: '#f0fdf4',
-      border: '1px solid #bbf7d0',
-      borderRadius: '6px',
-      color: '#16a34a',
-      marginBottom: '16px',
-    },
-  },
-  searchInfo: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px 16px',
-    backgroundColor: '#eff6ff',
-    border: '1px solid #bfdbfe',
-    borderRadius: '6px',
-    marginBottom: '16px',
-  },
-  searchInfoText: {
-    margin: 0,
-    color: '#1e40af',
-    fontWeight: '500',
-  },
-  clearSearchButton: {
-    padding: '6px 12px',
-    background: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  loading: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '40px',
-    color: '#6b7280',
-  },
-  spinner: {
-    width: '32px',
-    height: '32px',
-    border: '3px solid #d1d5db',
-    borderTop: '3px solid #4f46e5',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    marginBottom: '12px',
-  },
-  stats: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '16px',
-  },
-  statCard: {
-    padding: '20px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    textAlign: 'center',
-  },
-  statNumber: {
-    margin: '0 0 8px 0',
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-  statLabel: {
-    margin: 0,
-    color: '#6b7280',
-    fontSize: '14px',
-  },
 };
 
 export default Dashboard;

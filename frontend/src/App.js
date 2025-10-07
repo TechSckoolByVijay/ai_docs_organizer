@@ -2,7 +2,9 @@
  * Main App component with routing and authentication
  */
 import React, { useState } from 'react';
+import './index.css';
 import { AuthProvider, useAuth } from './AuthContext';
+import { ThemeProvider } from './ThemeContext';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
@@ -17,6 +19,11 @@ const AppContent = () => {
     setShowAuth(true);
   };
 
+  const handleSignIn = () => {
+    setAuthMode('login');
+    setShowAuth(true);
+  };
+
   const handleToggleAuth = () => {
     setAuthMode(authMode === 'login' ? 'signup' : 'login');
   };
@@ -27,9 +34,9 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div style={styles.loading}>
-        <div style={styles.spinner}></div>
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full spin mb-4"></div>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">Loading...</p>
       </div>
     );
   }
@@ -40,10 +47,16 @@ const AppContent = () => {
 
   if (showAuth) {
     return (
-      <div>
-        <div style={styles.backButton}>
-          <button onClick={handleBackToLanding} style={styles.backBtn}>
-            ← Back to Home
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="absolute top-6 left-6 z-10">
+          <button 
+            onClick={handleBackToLanding} 
+            className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back to Home</span>
           </button>
         </div>
         <Auth mode={authMode} onToggle={handleToggleAuth} />
@@ -51,53 +64,19 @@ const AppContent = () => {
     );
   }
 
-  return <LandingPage onGetStarted={handleGetStarted} />;
+  return <LandingPage onGetStarted={handleGetStarted} onSignIn={handleSignIn} />;
 };
 
 const App = () => {
   return (
-    <AuthProvider>
-      <div className="App">
-        <AppContent />
-      </div>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <div className="App">
+          <AppContent />
+        </div>
+      </AuthProvider>
+    </ThemeProvider>
   );
-};
-
-const styles = {
-  loading: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    color: '#6b7280',
-  },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '4px solid #d1d5db',
-    borderTop: '4px solid #4f46e5',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    marginBottom: '16px',
-  },
-  backButton: {
-    position: 'absolute',
-    top: '20px',
-    left: '20px',
-    zIndex: 10,
-  },
-  backBtn: {
-    padding: '8px 16px',
-    background: 'rgba(255, 255, 255, 0.9)',
-    border: '1px solid #d1d5db',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
-  },
 };
 
 export default App;

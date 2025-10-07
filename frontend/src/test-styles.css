@@ -1,0 +1,36 @@
+/* Test CSS file to ensure styles are loading */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.test-gradient {
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1) !important;
+    padding: 20px !important;
+    border-radius: 15px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
+    margin: 20px !important;
+}
+
+.test-button {
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4) !important;
+    color: white !important;
+    padding: 15px 30px !important;
+    border: none !important;
+    border-radius: 25px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transform: scale(1) !important;
+    transition: all 0.3s ease !important;
+}
+
+.test-button:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
+}
+
+/* Override any existing styles */
+* {
+    box-sizing: border-box !important;
+}
