@@ -192,53 +192,53 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Stats Cards */}
+        {/* Compact Stats Cards */}
         {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="stat-card-primary animate-fade-in hover-lift">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="stat-card-primary animate-fade-in hover-lift p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white/80 mb-2">Total Documents</p>
-                  <p className="text-3xl font-bold text-white">{stats.total}</p>
+                  <p className="text-xs font-medium text-white/70 mb-1">Total Documents</p>
+                  <p className="text-2xl font-bold text-white">{stats.total}</p>
                 </div>
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <FileText className="w-8 h-8 text-white" />
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <FileText className="w-5 h-5 text-white" />
                 </div>
               </div>
             </div>
             
-            <div className="stat-card-secondary animate-fade-in hover-lift" style={{ animationDelay: '100ms' }}>
+            <div className="stat-card-secondary animate-fade-in hover-lift p-4" style={{ animationDelay: '100ms' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white/80 mb-2">Categories</p>
-                  <p className="text-3xl font-bold text-white">{stats.categories}</p>
+                  <p className="text-xs font-medium text-white/70 mb-1">Categories</p>
+                  <p className="text-2xl font-bold text-white">{stats.categories}</p>
                 </div>
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <Folder className="w-8 h-8 text-white" />
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Folder className="w-5 h-5 text-white" />
                 </div>
               </div>
             </div>
             
-            <div className="stat-card-accent animate-fade-in hover-lift" style={{ animationDelay: '200ms' }}>
+            <div className="stat-card-accent animate-fade-in hover-lift p-4" style={{ animationDelay: '200ms' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white/80 mb-2">Storage Used</p>
-                  <p className="text-3xl font-bold text-white">{stats.totalSize}MB</p>
+                  <p className="text-xs font-medium text-white/70 mb-1">Storage Used</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalSize}MB</p>
                 </div>
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <HardDrive className="w-8 h-8 text-white" />
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <HardDrive className="w-5 h-5 text-white" />
                 </div>
               </div>
             </div>
             
-            <div className="stat-card-warning animate-fade-in hover-lift" style={{ animationDelay: '300ms' }}>
+            <div className="stat-card-warning animate-fade-in hover-lift p-4" style={{ animationDelay: '300ms' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white/80 mb-2">This Week</p>
-                  <p className="text-3xl font-bold text-white">{stats.recent}</p>
+                  <p className="text-xs font-medium text-white/70 mb-1">This Week</p>
+                  <p className="text-2xl font-bold text-white">{stats.recent}</p>
                 </div>
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                  <Activity className="w-8 h-8 text-white" />
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Activity className="w-5 h-5 text-white" />
                 </div>
               </div>
             </div>

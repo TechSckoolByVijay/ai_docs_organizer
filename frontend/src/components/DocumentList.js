@@ -12,28 +12,16 @@ import {
   HardDrive, 
   RefreshCw,
   FolderOpen,
-  Eye,
   AlertCircle,
   CheckCircle,
   Clock,
   File,
-  Tag,
-  ChevronDown,
-  ChevronUp
+  Tag
 } from 'lucide-react';
 
 const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
   const [deletingId, setDeletingId] = useState(null);
   const [thumbnailUrls, setThumbnailUrls] = useState({});
-  const [expandedPreviews, setExpandedPreviews] = useState({});
-
-  // Toggle preview expansion
-  const togglePreview = (documentId) => {
-    setExpandedPreviews(prev => ({
-      ...prev,
-      [documentId]: !prev[documentId]
-    }));
-  };
 
   // Load thumbnails for image documents
   useEffect(() => {
@@ -138,10 +126,10 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
     const contentType = doc.content_type;
     const extension = filename.toLowerCase().split('.').pop();
     
-    // Check if we have a thumbnail for this image or PDF
+    // Check if we have a thumbnail for this image or PDF - smaller size for better layout
     if ((contentType?.includes('image') || contentType === 'application/pdf') && thumbnailUrls[doc.id]) {
       return (
-        <div className="w-64 h-64 rounded-2xl overflow-hidden border-4 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 shadow-lg">
+        <div className="w-48 h-48 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 shadow-md">
           <img 
             src={thumbnailUrls[doc.id]} 
             alt={filename}
@@ -151,19 +139,19 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
       );
     }
     
-    // Fallback to larger icons for non-images/PDFs
+    // Fallback to medium-sized icons for non-images/PDFs
     if (contentType?.includes('image') || ['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-      return <Image className="w-16 h-16 text-blue-500" />;
+      return <Image className="w-12 h-12 text-blue-500" />;
     }
     
     switch (extension) {
       case 'pdf':
-        return <FileText className="w-16 h-16 text-red-500" />;
+        return <FileText className="w-12 h-12 text-red-500" />;
       case 'doc':
       case 'docx':
-        return <FileText className="w-16 h-16 text-blue-600" />;
+        return <FileText className="w-12 h-12 text-blue-600" />;
       default:
-        return <File className="w-16 h-16 text-gray-500" />;
+        return <File className="w-12 h-12 text-gray-500" />;
     }
   };
 
@@ -226,10 +214,10 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-          <FileText className="w-6 h-6 mr-2" />
+      {/* Header - Compact */}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+          <FileText className="w-5 h-5 mr-2" />
           Your Documents ({documents.length})
         </h3>
         <button
@@ -239,35 +227,57 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
             onRefresh();
           }}
           style={{ pointerEvents: 'auto', zIndex: 10 }}
-          className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors cursor-pointer"
+          className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors cursor-pointer text-sm"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Refresh</span>
         </button>
       </div>
 
-      {/* Document Grid - adjusted for larger thumbnails */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Document Grid - optimized layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
         {documents.map((doc, index) => (
           <div 
             key={doc.id} 
-            className="card p-6 card-hover animate-slide-up overflow-hidden"
+            className="card p-5 card-hover animate-slide-up overflow-hidden relative group"
             style={{ 
               animationDelay: `${index * 50}ms`,
               wordBreak: 'break-word',
               overflowWrap: 'break-word'
             }}
+            title={doc.extracted_text ? `Preview: ${doc.extracted_text.substring(0, 200)}...` : doc.original_filename}
           >
+            {/* Hover Preview Tooltip */}
+            {doc.extracted_text && (
+              <div className="absolute inset-x-0 bottom-0 bg-gray-900/95 dark:bg-gray-800/95 text-white p-3 rounded-b-lg transform translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-in-out z-10 backdrop-blur-sm">
+                <div className="flex items-start space-x-2">
+                  <FileText className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-300" />
+                  <div>
+                    <p className="text-xs font-medium text-blue-200 mb-1">Document Preview:</p>
+                    <p className="text-xs text-gray-200 leading-relaxed">
+                      "{doc.extracted_text.substring(0, 150)}..."
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Large Thumbnail Display - moved to top for image documents and PDFs */}
             {((doc.content_type?.includes('image') || doc.content_type === 'application/pdf') && thumbnailUrls[doc.id]) && (
-              <div className="flex justify-center mb-6">
-                {getFileIcon(doc)}
+              <div className="flex justify-center mb-4">
+                <div className="w-48 h-48 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 shadow-md">
+                  <img 
+                    src={thumbnailUrls[doc.id]} 
+                    alt={doc.original_filename}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
               </div>
             )}
             
-            {/* Card Header */}
-            <div className="flex items-start justify-between mb-4 w-full overflow-hidden">
-              <div className="flex items-start space-x-4 flex-1 min-w-0">
+            {/* Card Header - Compact */}
+            <div className="flex items-start justify-between mb-3 w-full overflow-hidden">
+              <div className="flex items-start space-x-3 flex-1 min-w-0">
                 {/* Only show small icon if not an image/PDF with thumbnail */}
                 {!((doc.content_type?.includes('image') || doc.content_type === 'application/pdf') && thumbnailUrls[doc.id]) && (
                   <div className="flex-shrink-0">
@@ -276,20 +286,14 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
                 )}
                 <div className="flex-1 min-w-0 overflow-hidden">
                   <h4 
-                    className="text-lg font-medium text-gray-900 dark:text-white truncate w-full" 
+                    className="text-base font-semibold text-gray-900 dark:text-white truncate w-full mb-1" 
                     title={doc.original_filename}
-                    style={{ 
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      maxWidth: '100%'
-                    }}
                   >
                     {doc.original_filename}
                   </h4>
-                  <div className="flex items-center flex-wrap gap-2 mt-2 w-full overflow-hidden">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryStyle(doc.category)} flex-shrink-0`}>
-                      <Tag className="w-3 h-3 mr-1" />
+                  <div className="flex items-center flex-wrap gap-2 w-full overflow-hidden">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${getCategoryStyle(doc.category)} flex-shrink-0`}>
+                      <Tag className="w-2.5 h-2.5 mr-1" />
                       {doc.category}
                     </span>
                     {shouldShowStatus(doc.processing_status) && (
@@ -338,82 +342,21 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
               </div>
             </div>
 
-            {/* Document Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-3 border-t border-gray-200 dark:border-gray-600 w-full overflow-hidden">
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
-                <Calendar className="w-4 h-4 flex-shrink-0" />
-                <span 
-                  className="truncate max-w-full"
-                  style={{ 
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
+            {/* Document Details - Compact */}
+            <div className="grid grid-cols-2 gap-3 py-2 border-t border-gray-200 dark:border-gray-600 w-full overflow-hidden">
+              <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
+                <Calendar className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-full">
                   {formatDate(doc.upload_date)}
                 </span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
-                <HardDrive className="w-4 h-4 flex-shrink-0" />
-                <span 
-                  className="truncate max-w-full"
-                  style={{ 
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
+              <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
+                <HardDrive className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-full">
                   {formatFileSize(doc.file_size)}
                 </span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
-                <FileText className="w-4 h-4 flex-shrink-0" />
-                <span 
-                  className="truncate max-w-full" 
-                  title={doc.content_type}
-                  style={{ 
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}
-                >
-                  {doc.content_type}
-                </span>
-              </div>
             </div>
-
-            {/* Collapsible Document Preview */}
-            {doc.extracted_text && (
-              <div className="mt-4">
-                <button
-                  onClick={() => togglePreview(doc.id)}
-                  className="flex items-center justify-between w-full p-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Eye className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Document Preview
-                    </span>
-                  </div>
-                  {expandedPreviews[doc.id] ? (
-                    <ChevronUp className="w-4 h-4 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                  )}
-                </button>
-                
-                {/* Expandable preview content */}
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  expandedPreviews[doc.id] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                }`}>
-                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-b-lg border-x border-b border-gray-200 dark:border-gray-600">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 italic leading-relaxed">
-                      "{doc.extracted_text.substring(0, 200)}..."
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         ))}
       </div>
