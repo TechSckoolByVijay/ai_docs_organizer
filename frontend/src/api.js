@@ -62,6 +62,7 @@ export const documentsAPI = {
   get: (id) => api.get(`/documents/${id}`),
   delete: (id) => api.delete(`/documents/${id}`),
   download: (id) => api.get(`/documents/${id}/download`, { responseType: 'blob' }),
+  getThumbnail: (id, size = 960) => api.get(`/documents/${id}/thumbnail?size=${size}`, { responseType: 'blob' }),
   getCategories: () => api.get('/documents/categories'),
   processPending: () => api.post('/documents/process-pending'),
 };

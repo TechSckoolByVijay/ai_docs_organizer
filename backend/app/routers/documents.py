@@ -171,6 +171,110 @@ async def download_document(
         )
 
 
+@router.get("/{document_id}/thumbnail")
+async def get_document_thumbnail(
+    document_id: int,
+    size: int = Query(960, ge=50, le=1200, description="Thumbnail size in pixels"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get a thumbnail preview of a document (for images and PDFs)."""
+    from fastapi.responses import StreamingResponse
+    from PIL import Image
+    import io
+    import fitz  # PyMuPDF for PDF processing
+    
+    try:
+        # Get document details
+        document = document_service.get_document(db, document_id, current_user.id)
+        if not document:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found"
+            )
+        
+        # Check if it's an image or PDF file
+        if not document.content_type or not (document.content_type.startswith('image/') or document.content_type == 'application/pdf'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Thumbnail only available for image and PDF files"
+            )
+        
+        # Get file content
+        file_content = document_service.get_file_content(db, document_id, current_user.id)
+        if not file_content:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document file not found"
+            )
+        
+        # Create thumbnail
+        try:
+            if document.content_type == 'application/pdf':
+                # Handle PDF files
+                pdf_document = fitz.open(stream=file_content, filetype="pdf")
+                
+                if len(pdf_document) == 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="PDF file is empty"
+                    )
+                
+                # Get the first page
+                first_page = pdf_document[0]
+                
+                # Render page to image (higher DPI for better quality)
+                mat = fitz.Matrix(2.0, 2.0)  # 2x zoom for better quality
+                pix = first_page.get_pixmap(matrix=mat)
+                
+                # Convert to PIL Image
+                img_data = pix.tobytes("ppm")
+                image = Image.open(io.BytesIO(img_data))
+                
+                pdf_document.close()
+                
+            else:
+                # Handle image files
+                image = Image.open(io.BytesIO(file_content))
+            
+            # Convert to RGB if necessary (handles RGBA, grayscale, etc.)
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Create thumbnail while maintaining aspect ratio
+            image.thumbnail((size, size), Image.Resampling.LANCZOS)
+            
+            # Save thumbnail to bytes
+            thumbnail_bytes = io.BytesIO()
+            image.save(thumbnail_bytes, format='JPEG', quality=85, optimize=True)
+            thumbnail_bytes.seek(0)
+            
+            return StreamingResponse(
+                thumbnail_bytes,
+                media_type='image/jpeg',
+                headers={
+                    "Cache-Control": "public, max-age=3600",  # Cache for 1 hour
+                    "Content-Length": str(len(thumbnail_bytes.getvalue()))
+                }
+            )
+            
+        except Exception as e:
+            print(f"Error creating thumbnail for document {document_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create thumbnail"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Unexpected error creating thumbnail for document {document_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get thumbnail"
+        )
+
+
 
 
 

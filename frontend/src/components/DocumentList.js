@@ -1,7 +1,7 @@
 /**
  * Document List component for displaying user documents
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { documentsAPI } from '../api';
 import { 
   Download, 
@@ -17,11 +17,60 @@ import {
   CheckCircle,
   Clock,
   File,
-  Tag
+  Tag,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
   const [deletingId, setDeletingId] = useState(null);
+  const [thumbnailUrls, setThumbnailUrls] = useState({});
+  const [expandedPreviews, setExpandedPreviews] = useState({});
+
+  // Toggle preview expansion
+  const togglePreview = (documentId) => {
+    setExpandedPreviews(prev => ({
+      ...prev,
+      [documentId]: !prev[documentId]
+    }));
+  };
+
+  // Load thumbnails for image documents
+  useEffect(() => {
+    const loadThumbnails = async () => {
+      const imageDocuments = documents.filter(doc => 
+        doc.content_type && (doc.content_type.startsWith('image/') || doc.content_type === 'application/pdf')
+      );
+
+      const newThumbnailUrls = {};
+      
+      for (const doc of imageDocuments) {
+        try {
+          const response = await documentsAPI.getThumbnail(doc.id, 960);
+          const blob = new Blob([response.data], { type: 'image/jpeg' });
+          const url = URL.createObjectURL(blob);
+          newThumbnailUrls[doc.id] = url;
+        } catch (error) {
+          console.log(`Failed to load thumbnail for document ${doc.id}:`, error);
+        }
+      }
+      
+      setThumbnailUrls(prev => {
+        // Clean up old URLs
+        Object.values(prev).forEach(url => URL.revokeObjectURL(url));
+        return newThumbnailUrls;
+      });
+    };
+
+    if (documents.length > 0) {
+      loadThumbnails();
+    }
+
+    // Cleanup function
+    return () => {
+      Object.values(thumbnailUrls).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [documents]);
 
   const handleDelete = async (documentId) => {
     if (!window.confirm('Are you sure you want to delete this document?')) {
@@ -31,6 +80,17 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
     setDeletingId(documentId);
     try {
       await documentsAPI.delete(documentId);
+      
+      // Clean up thumbnail URL if exists
+      if (thumbnailUrls[documentId]) {
+        URL.revokeObjectURL(thumbnailUrls[documentId]);
+        setThumbnailUrls(prev => {
+          const newUrls = { ...prev };
+          delete newUrls[documentId];
+          return newUrls;
+        });
+      }
+      
       if (onDocumentDeleted) {
         onDocumentDeleted(documentId);
       }
@@ -73,35 +133,55 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getFileIcon = (filename, contentType) => {
+  const getFileIcon = (doc) => {
+    const filename = doc.original_filename;
+    const contentType = doc.content_type;
     const extension = filename.toLowerCase().split('.').pop();
     
+    // Check if we have a thumbnail for this image or PDF
+    if ((contentType?.includes('image') || contentType === 'application/pdf') && thumbnailUrls[doc.id]) {
+      return (
+        <div className="w-64 h-64 rounded-2xl overflow-hidden border-4 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 shadow-lg">
+          <img 
+            src={thumbnailUrls[doc.id]} 
+            alt={filename}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+      );
+    }
+    
+    // Fallback to larger icons for non-images/PDFs
     if (contentType?.includes('image') || ['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-      return <Image className="w-6 h-6 text-blue-500" />;
+      return <Image className="w-16 h-16 text-blue-500" />;
     }
     
     switch (extension) {
       case 'pdf':
-        return <FileText className="w-6 h-6 text-red-500" />;
+        return <FileText className="w-16 h-16 text-red-500" />;
       case 'doc':
       case 'docx':
-        return <FileText className="w-6 h-6 text-blue-600" />;
+        return <FileText className="w-16 h-16 text-blue-600" />;
       default:
-        return <File className="w-6 h-6 text-gray-500" />;
+        return <File className="w-16 h-16 text-gray-500" />;
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'failed':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'pending':
+      case 'processing':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-400" />;
+        return null; // Don't show icon for completed status
     }
+  };
+
+  const shouldShowStatus = (status) => {
+    // Only show status if it's not completed (to reduce UI clutter)
+    return status && status !== 'completed';
   };
 
   const getCategoryStyle = (category) => {
@@ -166,8 +246,8 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
         </button>
       </div>
 
-      {/* Document Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* Document Grid - adjusted for larger thumbnails */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {documents.map((doc, index) => (
           <div 
             key={doc.id} 
@@ -178,13 +258,23 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
               overflowWrap: 'break-word'
             }}
           >
+            {/* Large Thumbnail Display - moved to top for image documents and PDFs */}
+            {((doc.content_type?.includes('image') || doc.content_type === 'application/pdf') && thumbnailUrls[doc.id]) && (
+              <div className="flex justify-center mb-6">
+                {getFileIcon(doc)}
+              </div>
+            )}
+            
             {/* Card Header */}
             <div className="flex items-start justify-between mb-4 w-full overflow-hidden">
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <div className="flex-shrink-0">
-                  {getFileIcon(doc.original_filename, doc.content_type)}
-                </div>
-                <div className="flex-1 min-w-0 max-w-0 overflow-hidden" style={{ maxWidth: 'calc(100% - 120px)' }}>
+              <div className="flex items-start space-x-4 flex-1 min-w-0">
+                {/* Only show small icon if not an image/PDF with thumbnail */}
+                {!((doc.content_type?.includes('image') || doc.content_type === 'application/pdf') && thumbnailUrls[doc.id]) && (
+                  <div className="flex-shrink-0">
+                    {getFileIcon(doc)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 overflow-hidden">
                   <h4 
                     className="text-lg font-medium text-gray-900 dark:text-white truncate w-full" 
                     title={doc.original_filename}
@@ -197,12 +287,12 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
                   >
                     {doc.original_filename}
                   </h4>
-                  <div className="flex items-center flex-wrap gap-2 mt-1 w-full overflow-hidden">
+                  <div className="flex items-center flex-wrap gap-2 mt-2 w-full overflow-hidden">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryStyle(doc.category)} flex-shrink-0`}>
                       <Tag className="w-3 h-3 mr-1" />
                       {doc.category}
                     </span>
-                    {doc.processing_status && (
+                    {shouldShowStatus(doc.processing_status) && (
                       <div className="flex items-center space-x-1 flex-shrink-0">
                         {getStatusIcon(doc.processing_status)}
                         <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
@@ -292,18 +382,36 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
               </div>
             </div>
 
-            {/* Document Preview */}
+            {/* Collapsible Document Preview */}
             {doc.extracted_text && (
-              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Eye className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Document Preview
-                  </span>
+              <div className="mt-4">
+                <button
+                  onClick={() => togglePreview(doc.id)}
+                  className="flex items-center justify-between w-full p-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Eye className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Document Preview
+                    </span>
+                  </div>
+                  {expandedPreviews[doc.id] ? (
+                    <ChevronUp className="w-4 h-4 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  )}
+                </button>
+                
+                {/* Expandable preview content */}
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  expandedPreviews[doc.id] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                }`}>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-b-lg border-x border-b border-gray-200 dark:border-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 italic leading-relaxed">
+                      "{doc.extracted_text.substring(0, 200)}..."
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 italic leading-relaxed">
-                  "{doc.extracted_text.substring(0, 120)}..."
-                </p>
               </div>
             )}
           </div>

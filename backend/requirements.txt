@@ -19,6 +19,7 @@ python-magic==0.4.27
 pillow==10.1.0
 pypdf2==3.0.1
 pytesseract==0.3.10
+pymupdf==1.23.8
 
 # Azure services (for future integration)
 azure-servicebus==7.11.4
