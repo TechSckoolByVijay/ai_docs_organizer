@@ -317,12 +317,36 @@ class DocumentService:
         if not document:
             return None
         
-        if self.use_azure and self.blob_service:
-            # Download from Azure Blob Storage
-            return self.blob_service.download_file(document.file_path)
-        else:
-            # Read local file
+        try:
+            # First try Azure Blob Storage if available
+            if self.use_azure and self.blob_service:
+                content = self.blob_service.download_file(document.file_path)
+                if content:
+                    return content
+                else:
+                    print(f"Blob not found, trying local fallback: {document.file_path}")
+            
+            # Fallback to local file (or if Azure is not configured)
             if os.path.exists(document.file_path):
                 with open(document.file_path, 'rb') as f:
                     return f.read()
-        return None
+            
+            # Try alternative local paths
+            alternative_paths = [
+                os.path.join(self.upload_dir, f"user_{user_id}", os.path.basename(document.file_path)),
+                os.path.join(self.upload_dir, os.path.basename(document.file_path)),
+                document.file_path
+            ]
+            
+            for path in alternative_paths:
+                if os.path.exists(path):
+                    print(f"Found file at alternative path: {path}")
+                    with open(path, 'rb') as f:
+                        return f.read()
+                        
+            print(f"File not found in any location for document {document_id}")
+            return None
+            
+        except Exception as e:
+            print(f"Error retrieving file content for document {document_id}: {e}")
+            return None

@@ -16,6 +16,11 @@ const Auth = ({ mode = 'login', onToggle }) => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // Debug log to check if onToggle is passed correctly
+  React.useEffect(() => {
+    console.log('Auth component props:', { mode, onToggle: typeof onToggle });
+  }, [mode, onToggle]);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -26,11 +31,15 @@ const Auth = ({ mode = 'login', onToggle }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Form submitted:', { mode, formData }); // Debug log
     setLoading(true);
     setError('');
 
     try {
       if (mode === 'login') {
+        console.log('Attempting login...'); // Debug log
         const result = await login({
           username: formData.username,
           password: formData.password,
@@ -39,16 +48,21 @@ const Auth = ({ mode = 'login', onToggle }) => {
           setError(result.error);
         }
       } else {
+        console.log('Attempting signup...'); // Debug log
         const result = await signup(formData);
+        console.log('Signup result:', result); // Debug log
         if (result.success) {
           alert('Account created successfully! Please log in.');
-          onToggle();
+          if (onToggle && typeof onToggle === 'function') {
+            onToggle();
+          }
         } else {
           setError(result.error);
         }
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      console.error('Form submission error:', err); // Debug log
+      setError('An unexpected error occurred: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -166,6 +180,10 @@ const Auth = ({ mode = 'login', onToggle }) => {
               type="submit" 
               disabled={loading}
               className="w-full btn-primary flex items-center justify-center group"
+              style={{ 
+                pointerEvents: loading ? 'none' : 'auto',
+                cursor: loading ? 'not-allowed' : 'pointer' 
+              }}
             >
               {loading ? (
                 <>
@@ -183,19 +201,36 @@ const Auth = ({ mode = 'login', onToggle }) => {
 
           {/* Toggle Mode */}
           <div className="mt-8 text-center">
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
               {mode === 'login' 
                 ? "Don't have an account? " 
                 : "Already have an account? "
               }
-              <button 
-                type="button"
-                onClick={onToggle}
-                className="font-semibold text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
-              >
-                {mode === 'login' ? 'Sign up here' : 'Sign in here'}
-              </button>
             </p>
+            <div
+              onClick={() => {
+                console.log('Direct onClick triggered!');
+                console.log('Current mode:', mode);
+                console.log('onToggle function:', onToggle);
+                if (onToggle) {
+                  console.log('Calling onToggle...');
+                  onToggle();
+                } else {
+                  console.error('onToggle is null/undefined!');
+                }
+              }}
+              className="font-semibold text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 transition-colors cursor-pointer underline hover:no-underline inline-block"
+              style={{
+                cursor: 'pointer',
+                userSelect: 'none',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#7c3aed',
+                textDecoration: 'underline'
+              }}
+            >
+              {mode === 'login' ? 'Sign up here' : 'Sign in here'}
+            </div>
           </div>
 
           {/* Demo Account Info */}

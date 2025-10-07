@@ -117,15 +117,25 @@ const Dashboard = () => {
       <header className="glass-card border-b border-white/20 dark:border-gray-700/20 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:rotate-3">
+            <div className="flex items-center space-x-4 flex-1 min-w-0">
+              <div className="w-12 h-12 bg-gradient-to-r from-primary-500 via-secondary-500 to-accent-500 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:rotate-3 flex-shrink-0">
                 <FileText className="w-7 h-7 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gradient bg-gradient-to-r from-primary-600 via-secondary-600 to-accent-600 bg-clip-text text-transparent">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <h1 
+                  className="text-2xl font-bold text-white whitespace-nowrap overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(to right, #3b82f6, #8b5cf6, #06b6d4)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%'
+                  }}
+                >
                   Document Organizer
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-300 dark:text-gray-400 truncate">
                   Welcome back, {user?.username}! ✨
                 </p>
               </div>

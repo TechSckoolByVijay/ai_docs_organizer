@@ -124,42 +124,54 @@ async def download_document(
     current_user = Depends(get_current_user)
 ):
     """Download a document file."""
-    file_path = document_service.get_file_path(db, document_id, current_user.id)
-    if not file_path:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document file not found"
+    from fastapi.responses import StreamingResponse
+    import io
+    
+    try:
+        # Get document details
+        document = document_service.get_document(db, document_id, current_user.id)
+        if not document:
+            print(f"Document {document_id} not found for user {current_user.id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found"
+            )
+        
+        print(f"Attempting to download document {document_id}: {document.original_filename}")
+        print(f"File path: {document.file_path}")
+        
+        # Get file content (handles both Azure and local storage)
+        file_content = document_service.get_file_content(db, document_id, current_user.id)
+        if not file_content:
+            print(f"File content not found for document {document_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document file not found. Path: {document.file_path}"
+            )
+        
+        print(f"Successfully retrieved {len(file_content)} bytes for document {document_id}")
+        
+        # Create streaming response
+        return StreamingResponse(
+            io.BytesIO(file_content),
+            media_type='application/octet-stream',
+            headers={
+                "Content-Disposition": f"attachment; filename=\"{document.original_filename}\"",
+                "Content-Length": str(len(file_content))
+            }
         )
-    
-    # Get document details for filename
-    document = document_service.get_document(db, document_id, current_user.id)
-    filename = document.original_filename if document else "document"
-    
-    return FileResponse(
-        path=file_path,
-        filename=filename,
-        media_type='application/octet-stream'
-    )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Unexpected error downloading document {document_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to download document"
+        )
 
 
-@router.delete("/{document_id}", response_model=APIResponse)
-async def delete_document(
-    document_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    """Delete a document."""
-    success = document_service.delete_document(db, document_id, current_user.id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found"
-        )
-    
-    return APIResponse(
-        status="success",
-        message="Document deleted successfully"
-    )
+
 
 
 @router.post("/process-pending", response_model=APIResponse)

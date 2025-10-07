@@ -22,6 +22,11 @@ import {
 
 const LandingPage = ({ onGetStarted, onSignIn }) => {
   const { isDarkMode, toggleTheme } = useTheme();
+  
+  // Create a signup handler that sets mode to signup
+  const handleSignUp = () => {
+    onGetStarted(); // This already sets mode to 'signup'
+  };
   const features = [
     {
       icon: <FileText className="w-8 h-8" />,
@@ -131,12 +136,11 @@ const LandingPage = ({ onGetStarted, onSignIn }) => {
               Sign In
             </button>
             <button
-              onClick={onGetStarted}
+              onClick={handleSignUp}
               className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <Sparkles className="w-5 h-5 mr-2 relative z-10" />
-              <span className="relative z-10">Get Started</span>
+              <span className="relative z-10">Sign Up</span>
             </button>
           </div>
         </div>
@@ -158,11 +162,11 @@ const LandingPage = ({ onGetStarted, onSignIn }) => {
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <button
-                onClick={onGetStarted}
+                onClick={handleSignUp}
                 className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold shadow-2xl hover:shadow-xl transform hover:scale-105 transition-all duration-300 group relative flex items-center"
               >
                 <Sparkles className="w-6 h-6 mr-3 animate-pulse" />
-                Start Organizing Today
+                Create Free Account
                 <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
               
@@ -308,11 +312,11 @@ const LandingPage = ({ onGetStarted, onSignIn }) => {
                   </p>
                   
                   <button
-                    onClick={onGetStarted}
+                    onClick={handleSignUp}
                     className="btn-primary w-full text-lg py-4 shadow-xl hover:shadow-2xl group"
                   >
                     <Sparkles className="w-6 h-6 mr-3 animate-pulse" />
-                    Start Organizing Today
+                    Create Free Account
                     <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform duration-200" />
                   </button>
                 </div>

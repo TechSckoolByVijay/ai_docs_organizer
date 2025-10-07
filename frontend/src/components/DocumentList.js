@@ -171,24 +171,39 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
         {documents.map((doc, index) => (
           <div 
             key={doc.id} 
-            className="card p-6 card-hover animate-slide-up"
-            style={{ animationDelay: `${index * 50}ms` }}
+            className="card p-6 card-hover animate-slide-up overflow-hidden"
+            style={{ 
+              animationDelay: `${index * 50}ms`,
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word'
+            }}
           >
             {/* Card Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                {getFileIcon(doc.original_filename, doc.content_type)}
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white truncate">
+            <div className="flex items-start justify-between mb-4 w-full overflow-hidden">
+              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                <div className="flex-shrink-0">
+                  {getFileIcon(doc.original_filename, doc.content_type)}
+                </div>
+                <div className="flex-1 min-w-0 max-w-0 overflow-hidden" style={{ maxWidth: 'calc(100% - 120px)' }}>
+                  <h4 
+                    className="text-lg font-medium text-gray-900 dark:text-white truncate w-full" 
+                    title={doc.original_filename}
+                    style={{ 
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '100%'
+                    }}
+                  >
                     {doc.original_filename}
                   </h4>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryStyle(doc.category)}`}>
+                  <div className="flex items-center flex-wrap gap-2 mt-1 w-full overflow-hidden">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryStyle(doc.category)} flex-shrink-0`}>
                       <Tag className="w-3 h-3 mr-1" />
                       {doc.category}
                     </span>
                     {doc.processing_status && (
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-1 flex-shrink-0">
                         {getStatusIcon(doc.processing_status)}
                         <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                           {doc.processing_status}
@@ -200,7 +215,7 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
               </div>
               
               {/* Actions */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 flex-shrink-0">
                 <button
                   onClick={(e) => {
                     e.preventDefault();
@@ -234,18 +249,46 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
             </div>
 
             {/* Document Details */}
-            <div className="grid grid-cols-3 gap-4 py-3 border-t border-gray-200 dark:border-gray-600">
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                <Calendar className="w-4 h-4" />
-                <span>{formatDate(doc.upload_date)}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 py-3 border-t border-gray-200 dark:border-gray-600 w-full overflow-hidden">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <span 
+                  className="truncate max-w-full"
+                  style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  {formatDate(doc.upload_date)}
+                </span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                <HardDrive className="w-4 h-4" />
-                <span>{formatFileSize(doc.file_size)}</span>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
+                <HardDrive className="w-4 h-4 flex-shrink-0" />
+                <span 
+                  className="truncate max-w-full"
+                  style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  {formatFileSize(doc.file_size)}
+                </span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                <FileText className="w-4 h-4" />
-                <span className="truncate">{doc.content_type}</span>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 min-w-0 overflow-hidden">
+                <FileText className="w-4 h-4 flex-shrink-0" />
+                <span 
+                  className="truncate max-w-full" 
+                  title={doc.content_type}
+                  style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  {doc.content_type}
+                </span>
               </div>
             </div>
 
