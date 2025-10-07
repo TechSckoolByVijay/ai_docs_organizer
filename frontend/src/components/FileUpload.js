@@ -241,25 +241,6 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
           <span>Camera</span>
         </button>
       </div>
-
-      {/* Supported File Types */}
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-          Supported File Types:
-        </h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[
-            { type: 'PDF Documents', icon: <FileText className="w-5 h-5 text-red-500" /> },
-            { type: 'Images (JPG, PNG)', icon: <Image className="w-5 h-5 text-blue-500" /> },
-            { type: 'Word Documents', icon: <FileText className="w-5 h-5 text-blue-600" /> },
-          ].map((item, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              {item.icon}
-              <span className="text-sm text-gray-600 dark:text-gray-400">{item.type}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

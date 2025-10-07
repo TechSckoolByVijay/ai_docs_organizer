@@ -9,7 +9,9 @@ import {
   X, 
   Loader, 
   Sparkles,
-  Hash
+  Hash,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const SearchBar = ({ onSearchResults, onSearchError }) => {
@@ -17,6 +19,7 @@ const SearchBar = ({ onSearchResults, onSearchError }) => {
   const [searching, setSearching] = useState(false);
   const [category, setCategory] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
   const handleSearch = async (e, searchQuery = null) => {
     if (e) {
@@ -62,6 +65,22 @@ const SearchBar = ({ onSearchResults, onSearchError }) => {
     if (onSearchResults) {
       onSearchResults(null); // Clear search results
     }
+  };
+
+  const handleToggleTips = (e) => {
+    console.log('🔥 SEARCH TIPS CLICKED! Event type:', e.type);
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Current showTips state:', showTips);
+    const newState = !showTips;
+    console.log('Setting new state to:', newState);
+    setShowTips(newState);
+    
+    // Force a re-render
+    setTimeout(() => {
+      console.log('After timeout, showTips is:', showTips);
+    }, 100);
   };
 
   const handleSuggestionClick = async (suggestionText) => {
@@ -205,9 +224,14 @@ const SearchBar = ({ onSearchResults, onSearchError }) => {
             </div>
             <button
               type="button"
-              onClick={handleClear}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleClear();
+              }}
               disabled={searching}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
+              style={{ pointerEvents: 'auto', zIndex: 10 }}
+              className="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800 rounded transition-colors cursor-pointer"
             >
               Clear
             </button>
@@ -245,13 +269,29 @@ const SearchBar = ({ onSearchResults, onSearchError }) => {
       </div>
 
       {/* Search Tips */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-        <div className="flex items-start">
-          <Hash className="w-5 h-5 text-purple-500 mr-3 mt-0.5 flex-shrink-0" />
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-              Search Tips
+      <div 
+        className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10 rounded-lg border border-purple-200 dark:border-purple-800 p-4 cursor-pointer"
+        onClick={handleToggleTips}
+        onMouseDown={handleToggleTips}
+        onPointerDown={handleToggleTips}
+        style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
+      >
+        <div className="flex items-center justify-between w-full text-left group hover:bg-purple-100/50 dark:hover:bg-purple-900/20 rounded-md p-2 -m-2 transition-colors">
+          <div className="flex items-start">
+            <Hash className="w-5 h-5 text-purple-500 mr-3 mt-0.5 flex-shrink-0" />
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+              Search Tips {showTips ? '(Expanded)' : '(Collapsed)'}
             </h3>
+          </div>
+          {showTips ? (
+            <ChevronUp className="w-4 h-4 text-purple-500 group-hover:text-purple-600 transition-colors flex-shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-purple-500 group-hover:text-purple-600 transition-colors flex-shrink-0" />
+          )}
+        </div>
+        
+        {showTips && (
+          <div className="mt-3 ml-8 animate-slide-up">
             <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
               <li>• Use natural language: "medical bills from December"</li>
               <li>• Search by document type: "receipts", "invoices", "statements"</li>
@@ -259,7 +299,7 @@ const SearchBar = ({ onSearchResults, onSearchError }) => {
               <li>• Search by date: "documents from last month"</li>
             </ul>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -245,13 +245,12 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Upload and Search */}
-          <div className="lg:col-span-1 space-y-8">
-            {/* Upload Section */}
-            <section className="card p-6 animate-slide-up">
+        <div className="grid lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - Upload */}
+          <div className="lg:col-span-1">
+            <section className="card p-6 animate-slide-up sticky top-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Upload Documents
                 </h2>
               </div>
@@ -259,17 +258,12 @@ const Dashboard = () => {
                 onUploadSuccess={handleUploadSuccess}
                 onUploadError={handleUploadError}
               />
-            </section>
-
-            {/* Search Section */}
-            <section className="card p-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Search Documents
-                </h2>
+              
+              {/* Process Pending Button */}
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
                 <button
                   onClick={handleProcessPending}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
+                  className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center justify-center space-x-2"
                   disabled={loading}
                   title="Process pending documents for better search results"
                 >
@@ -277,15 +271,25 @@ const Dashboard = () => {
                   <span>{loading ? 'Processing...' : 'Process Pending'}</span>
                 </button>
               </div>
+            </section>
+          </div>
+
+          {/* Right Content - Search and Documents */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Search Section - Now right above results */}
+            <section className="card p-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Search Documents
+                </h2>
+              </div>
               <SearchBar
                 onSearchResults={handleSearchResults}
                 onSearchError={handleSearchError}
               />
             </section>
-          </div>
 
-          {/* Right Column - Documents */}
-          <div className="lg:col-span-2">
+            {/* Documents Section */}
             <section className="card p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
               {isSearchActive && (
                 <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
