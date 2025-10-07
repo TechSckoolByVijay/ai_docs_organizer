@@ -16,11 +16,6 @@ const Auth = ({ mode = 'login', onToggle }) => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Debug log to check if onToggle is passed correctly
-  React.useEffect(() => {
-    console.log('Auth component props:', { mode, onToggle: typeof onToggle });
-  }, [mode, onToggle]);
-
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -31,15 +26,11 @@ const Auth = ({ mode = 'login', onToggle }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('Form submitted:', { mode, formData }); // Debug log
     setLoading(true);
     setError('');
 
     try {
       if (mode === 'login') {
-        console.log('Attempting login...'); // Debug log
         const result = await login({
           username: formData.username,
           password: formData.password,
@@ -48,9 +39,7 @@ const Auth = ({ mode = 'login', onToggle }) => {
           setError(result.error);
         }
       } else {
-        console.log('Attempting signup...'); // Debug log
         const result = await signup(formData);
-        console.log('Signup result:', result); // Debug log
         if (result.success) {
           alert('Account created successfully! Please log in.');
           if (onToggle && typeof onToggle === 'function') {
@@ -61,8 +50,7 @@ const Auth = ({ mode = 'login', onToggle }) => {
         }
       }
     } catch (err) {
-      console.error('Form submission error:', err); // Debug log
-      setError('An unexpected error occurred: ' + (err.message || 'Unknown error'));
+      setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -180,10 +168,6 @@ const Auth = ({ mode = 'login', onToggle }) => {
               type="submit" 
               disabled={loading}
               className="w-full btn-primary flex items-center justify-center group"
-              style={{ 
-                pointerEvents: loading ? 'none' : 'auto',
-                cursor: loading ? 'not-allowed' : 'pointer' 
-              }}
             >
               {loading ? (
                 <>
@@ -200,34 +184,40 @@ const Auth = ({ mode = 'login', onToggle }) => {
           </form>
 
           {/* Toggle Mode */}
-          <div className="mt-8 text-center">
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
+          <div className="mt-8 text-center relative z-50">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               {mode === 'login' 
                 ? "Don't have an account? " 
                 : "Already have an account? "
               }
             </p>
             <div
-              onClick={() => {
-                console.log('Direct onClick triggered!');
-                console.log('Current mode:', mode);
-                console.log('onToggle function:', onToggle);
+              onClick={(e) => {
+                console.log('Toggle clicked!');
+                e.preventDefault();
+                e.stopPropagation();
                 if (onToggle) {
-                  console.log('Calling onToggle...');
                   onToggle();
+                  console.log('onToggle executed');
                 } else {
-                  console.error('onToggle is null/undefined!');
+                  console.error('onToggle function missing');
                 }
               }}
-              className="font-semibold text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 transition-colors cursor-pointer underline hover:no-underline inline-block"
-              style={{
+              style={{ 
+                pointerEvents: 'auto',
+                zIndex: 9999,
                 cursor: 'pointer',
-                userSelect: 'none',
-                fontSize: '16px',
-                fontWeight: '600',
+                display: 'inline-block',
+                padding: '8px 16px',
+                border: '2px solid #7c3aed',
+                borderRadius: '8px',
+                backgroundColor: 'transparent',
                 color: '#7c3aed',
-                textDecoration: 'underline'
+                fontWeight: '600',
+                textDecoration: 'underline',
+                userSelect: 'none'
               }}
+              className="hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
             >
               {mode === 'login' ? 'Sign up here' : 'Sign in here'}
             </div>

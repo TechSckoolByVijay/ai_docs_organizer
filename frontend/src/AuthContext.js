@@ -77,12 +77,9 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (userData) => {
     try {
-      console.log('AuthContext signup called with:', userData); // Debug log
-      const response = await authAPI.signup(userData);
-      console.log('Signup response:', response); // Debug log
+      await authAPI.signup(userData);
       return { success: true };
     } catch (error) {
-      console.error('Signup error:', error); // Debug log
       const message = error.response?.data?.detail || 'Signup failed';
       return { success: false, error: message };
     }
