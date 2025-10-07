@@ -1,0 +1,146 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: docs_organizer_db
+    environment:
+      POSTGRES_DB: receipts_db
+      POSTGRES_USER: receipts_user
+      POSTGRES_PASSWORD: receipts_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U receipts_user -d receipts_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - docs_network
+
+  # pgAdmin for database administration
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: docs_organizer_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@receipts.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    networks:
+      - docs_network
+
+  # FastAPI Backend
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: docs_organizer_backend
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://receipts_user:receipts_password@db:5432/receipts_db
+      SECRET_KEY: your-super-secret-jwt-key-change-in-production-must-be-32-characters-minimum
+      BACKEND_PORT: 8000
+      FRONTEND_PORT: 3000
+      ALLOWED_ORIGINS: http://localhost:3000,http://frontend:3000
+      MAX_FILE_SIZE: 10485760
+      ALLOWED_EXTENSIONS: .pdf,.jpg,.jpeg,.png,.gif,.doc,.docx
+      DEBUG: "True"
+      # Azure Services Configuration (using existing env var names)
+      SERVICE_BUS_CONNECTION_STRING: ${SERVICE_BUS_CONNECTION_STRING:-}
+      AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING:-}
+      AZURE_STORAGE_ACCOUNT_URL: ${AZURE_STORAGE_ACCOUNT_URL:-}
+      AZURE_STORAGE_CONTAINER: ${AZURE_STORAGE_CONTAINER:-receipts-documents}
+      AZURE_SEARCH_ENDPOINT: ${AZURE_SEARCH_ENDPOINT:-}
+      AZURE_SEARCH_API_KEY: ${AZURE_SEARCH_API_KEY:-}
+      AZURE_SEARCH_INDEX_NAME: ${AZURE_SEARCH_INDEX_NAME:-docs-index}
+      AZURE_SEARCH_MIN_SCORE: ${AZURE_SEARCH_MIN_SCORE:-0.5}
+      # OpenAI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - docs_network
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: docs_organizer_frontend
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - docs_network
+    restart: unless-stopped
+
+  # Worker service for document processing (now implemented!)
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: docs_organizer_worker
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://receipts_user:receipts_password@db:5432/receipts_db
+      SECRET_KEY: your-super-secret-jwt-key-change-in-production-must-be-32-characters-minimum
+      # Azure Services Configuration (using existing env var names)
+      SERVICE_BUS_CONNECTION_STRING: ${SERVICE_BUS_CONNECTION_STRING:-}
+      AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING:-}
+      AZURE_STORAGE_ACCOUNT_URL: ${AZURE_STORAGE_ACCOUNT_URL:-}
+      AZURE_STORAGE_CONTAINER: ${AZURE_STORAGE_CONTAINER:-receipts-documents}
+      AZURE_SEARCH_ENDPOINT: ${AZURE_SEARCH_ENDPOINT:-}
+      AZURE_SEARCH_API_KEY: ${AZURE_SEARCH_API_KEY:-}
+      AZURE_SEARCH_INDEX_NAME: ${AZURE_SEARCH_INDEX_NAME:-docs-index}
+      AZURE_SEARCH_MIN_SCORE: ${AZURE_SEARCH_MIN_SCORE:-0.5}
+      # OpenAI Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Worker-specific configuration
+      WORKER_MODE: "true"
+      WORKER_LOG_LEVEL: "INFO"
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "worker.py"]
+    networks:
+      - docs_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  docs_network:
+    driver: bridge

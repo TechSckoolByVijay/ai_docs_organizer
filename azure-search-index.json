@@ -1,0 +1,180 @@
+{
+  "name": "documents-index",
+  "fields": [
+    {
+      "name": "document_id",
+      "type": "Edm.String",
+      "key": true,
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": false
+    },
+    {
+      "name": "user_id",
+      "type": "Edm.Int32",
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": true
+    },
+    {
+      "name": "original_filename",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": false,
+      "retrievable": true,
+      "sortable": false,
+      "analyzer": "standard.lucene"
+    },
+    {
+      "name": "category",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": false,
+      "facetable": true
+    },
+    {
+      "name": "content_type",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": false,
+      "facetable": true
+    },
+    {
+      "name": "extracted_text",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": false,
+      "retrievable": true,
+      "sortable": false,
+      "analyzer": "standard.lucene"
+    },
+    {
+      "name": "detected_intent",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": false,
+      "facetable": true
+    },
+    {
+      "name": "openai_summary",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": false,
+      "retrievable": true,
+      "sortable": false,
+      "analyzer": "standard.lucene"
+    },
+    {
+      "name": "openai_keywords",
+      "type": "Collection(Edm.String)",
+      "searchable": true,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": false,
+      "facetable": true
+    },
+    {
+      "name": "upload_date",
+      "type": "Edm.DateTimeOffset",
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": true,
+      "facetable": true
+    },
+    {
+      "name": "file_size",
+      "type": "Edm.Int64",
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": true,
+      "facetable": true
+    },
+    {
+      "name": "blob_path",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": false,
+      "retrievable": true,
+      "sortable": false
+    },
+    {
+      "name": "content_vector",
+      "type": "Collection(Edm.Single)",
+      "searchable": true,
+      "filterable": false,
+      "retrievable": false,
+      "sortable": false,
+      "dimensions": 1536,
+      "vectorSearchProfile": "vector-profile"
+    }
+  ],
+  "vectorSearch": {
+    "profiles": [
+      {
+        "name": "vector-profile",
+        "algorithm": "vector-algorithm"
+      }
+    ],
+    "algorithms": [
+      {
+        "name": "vector-algorithm",
+        "kind": "hnsw",
+        "hnswParameters": {
+          "metric": "cosine",
+          "m": 4,
+          "efConstruction": 400,
+          "efSearch": 500
+        }
+      }
+    ]
+  },
+  "semantic": {
+    "configurations": [
+      {
+        "name": "semantic-config",
+        "prioritizedFields": {
+          "titleField": {
+            "fieldName": "original_filename"
+          },
+          "prioritizedContentFields": [
+            {
+              "fieldName": "extracted_text"
+            },
+            {
+              "fieldName": "openai_summary"
+            }
+          ],
+          "prioritizedKeywordsFields": [
+            {
+              "fieldName": "openai_keywords"
+            },
+            {
+              "fieldName": "category"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "suggesters": [
+    {
+      "name": "document-suggester",
+      "searchMode": "analyzingInfixMatching",
+      "sourceFields": [
+        "original_filename",
+        "category",
+        "detected_intent"
+      ]
+    }
+  ]
+}
