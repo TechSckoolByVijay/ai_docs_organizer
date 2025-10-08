@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 from app.database import get_db, engine, Base
 from app.schemas import HealthResponse, APIResponse
-from app.routers import auth, documents, search, azure
+from app.routers import auth, documents, search, azure, notifications
 
 # Load environment variables
 load_dotenv()
@@ -44,6 +44,7 @@ app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(documents.router, prefix="/documents", tags=["documents"])
 app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(azure.router, tags=["azure"])
+app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 
 
 @app.get("/", response_model=APIResponse)

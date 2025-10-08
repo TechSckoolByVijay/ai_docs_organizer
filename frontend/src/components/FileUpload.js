@@ -3,6 +3,7 @@
  */
 import React, { useState, useRef } from 'react';
 import { documentsAPI } from '../api';
+import { useNotification } from '../NotificationContext';
 import { 
   Upload, 
   Camera, 
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 
 const FileUpload = ({ onUploadSuccess, onUploadError }) => {
+  const { addNotification } = useNotification();
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -88,6 +90,14 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
       clearInterval(progressInterval);
       setUploadProgress(100);
       
+      // Add success notification
+      addNotification({
+        type: 'success',
+        title: 'File Uploaded Successfully',
+        message: `${file.name} has been uploaded and is being processed.`,
+        autoRemove: true
+      });
+      
       if (onUploadSuccess) {
         onUploadSuccess(response.data);
       }
@@ -104,6 +114,15 @@ const FileUpload = ({ onUploadSuccess, onUploadError }) => {
       }, 1000);
     } catch (error) {
       const message = error.response?.data?.detail || 'Upload failed';
+      
+      // Add error notification
+      addNotification({
+        type: 'error',
+        title: 'Upload Failed',
+        message: `Failed to upload ${file.name}: ${message}`,
+        autoRemove: true
+      });
+      
       if (onUploadError) {
         onUploadError(message);
       }

@@ -1,9 +1,10 @@
 /**
- * Main Dashboard component
+ * Main Dashboard component - Clean notification system
  */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useTheme } from '../ThemeContext';
+import { useNotification } from '../NotificationContext';
 import { documentsAPI } from '../api';
 import FileUpload from './FileUpload';
 import DocumentList from './DocumentList';
@@ -25,6 +26,7 @@ import {
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
+  const { addNotification } = useNotification();
   const [documents, setDocuments] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(true);

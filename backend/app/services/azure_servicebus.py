@@ -3,6 +3,7 @@ Azure Service Bus service for document processing messaging.
 """
 import os
 import json
+import uuid
 from typing import Dict, Any, Optional
 from datetime import datetime
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
@@ -135,33 +136,19 @@ class AzureServiceBusService:
             print(f"Unexpected error sending indexing message: {e}")
             return False
     
-    async def send_notification_message(
-        self,
-        user_id: int,
-        notification_type: str,
-        message: str,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> bool:
+    def send_notification_message(self, notification_data: Dict[str, Any]) -> bool:
         """Send a notification message."""
         try:
-            message_data = {
-                "user_id": user_id,
-                "notification_type": notification_type,
-                "message": message,
-                "metadata": metadata or {},
-                "timestamp": datetime.utcnow().isoformat()
-            }
-            
             sb_message = ServiceBusMessage(
-                body=json.dumps(message_data),
+                body=json.dumps(notification_data),
                 content_type="application/json",
-                message_id=f"notif-{user_id}-{datetime.utcnow().timestamp()}"
+                message_id=f"notif-{notification_data.get('user_id')}-{datetime.utcnow().timestamp()}"
             )
             
             with self.client.get_queue_sender(self.notifications_queue) as sender:
                 sender.send_messages(sb_message)
             
-            print(f"Sent notification message for user {user_id}: {notification_type}")
+            print(f"Sent notification message for user {notification_data.get('user_id')}")
             return True
             
         except ServiceBusError as e:
@@ -170,6 +157,62 @@ class AzureServiceBusService:
         except Exception as e:
             print(f"Unexpected error sending notification: {e}")
             return False
+
+    async def send_notification_message_async(
+        self,
+        user_id: int,
+        notification_type: str,
+        message: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """Send a notification message (async version)."""
+        try:
+            message_data = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "title": notification_type.replace("_", " ").title(),
+                "message": message,
+                "type": notification_type,
+                "timestamp": datetime.utcnow().isoformat(),
+                "persistent": False,
+                "metadata": metadata or {}
+            }
+            
+            return self.send_notification_message(message_data)
+            
+        except Exception as e:
+            print(f"Unexpected error sending notification: {e}")
+            return False
+    
+    def receive_notifications_messages(self, max_messages: int = 10):
+        """Receive notification messages from the queue."""
+        try:
+            with self.client.get_queue_receiver(self.notifications_queue) as receiver:
+                received_msgs = receiver.receive_messages(max_message_count=max_messages, max_wait_time=5)
+                return received_msgs
+                
+        except ServiceBusError as e:
+            print(f"Error receiving notification messages: {e}")
+            return []
+        except Exception as e:
+            print(f"Unexpected error in notification receiver: {e}")
+            return []
+    
+    def complete_message(self, message):
+        """Complete a message to remove it from the queue."""
+        try:
+            with self.client.get_queue_receiver(self.notifications_queue) as receiver:
+                receiver.complete_message(message)
+        except Exception as e:
+            print(f"Error completing message: {e}")
+    
+    def abandon_message(self, message):
+        """Abandon a message to put it back in the queue."""
+        try:
+            with self.client.get_queue_receiver(self.notifications_queue) as receiver:
+                receiver.abandon_message(message)
+        except Exception as e:
+            print(f"Error abandoning message: {e}")
     
     async def receive_document_processing_messages(self, max_messages: int = 10):
         """Receive and process document processing messages."""
@@ -215,28 +258,58 @@ class AzureServiceBusService:
         """Process a document based on the message data."""
         try:
             document_id = message_data['document_id']
+            user_id = message_data['user_id']
             processing_type = message_data['processing_type']
             
             print(f"Processing document {document_id} with type {processing_type}")
+            
+            # Send notification about processing start
+            await self.send_notification_message_async(
+                user_id=user_id,
+                notification_type="info",
+                message=f"Document processing started for document {document_id}",
+                metadata={"document_id": document_id, "processing_type": processing_type}
+            )
             
             # Here you would implement the actual document processing logic
             # For example: text extraction, OCR, category detection, etc.
             
             # Simulate processing
+            import asyncio
+            await asyncio.sleep(2)  # Simulate processing time
+            
             if processing_type == "extract_text":
                 # Extract text from document
-                pass
+                print(f"Extracting text from document {document_id}")
             elif processing_type == "detect_category":
                 # Detect document category
-                pass
+                print(f"Detecting category for document {document_id}")
             elif processing_type == "generate_summary":
                 # Generate AI summary
-                pass
+                print(f"Generating summary for document {document_id}")
+            
+            # Send success notification
+            await self.send_notification_message_async(
+                user_id=user_id,
+                notification_type="success",
+                message=f"Document processing completed successfully for document {document_id}",
+                metadata={"document_id": document_id, "processing_type": processing_type}
+            )
             
             return True
             
         except Exception as e:
             print(f"Error in document processing: {e}")
+            
+            # Send error notification
+            if 'user_id' in message_data:
+                await self.send_notification_message_async(
+                    user_id=message_data['user_id'],
+                    notification_type="error",
+                    message=f"Document processing failed for document {message_data.get('document_id', 'unknown')}",
+                    metadata={"document_id": message_data.get('document_id'), "error": str(e)}
+                )
+            
             return False
     
     async def receive_search_indexing_messages(self, max_messages: int = 10):

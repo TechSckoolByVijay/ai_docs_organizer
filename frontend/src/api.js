@@ -73,6 +73,13 @@ export const searchAPI = {
   getHistory: () => api.get('/search/history'),
 };
 
+// Notifications API calls
+export const notificationsAPI = {
+  list: () => api.get('/notifications/notifications'),
+  send: (notificationData) => api.post('/notifications/send', notificationData),
+  delete: (id) => api.delete(`/notifications/${id}`),
+};
+
 // Health check
 export const healthAPI = {
   check: () => api.get('/health'),

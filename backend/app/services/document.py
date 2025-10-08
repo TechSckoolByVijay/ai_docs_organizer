@@ -145,16 +145,21 @@ class DocumentService:
             
             # Send notification about successful upload
             try:
-                await self.servicebus.send_notification_message(
-                    user_id=user.id,
-                    notification_type="document_uploaded",
-                    message=f"Document '{document.original_filename}' uploaded successfully",
-                    metadata={
+                notification_data = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": user.id,
+                    "title": "Document Uploaded",
+                    "message": f"Document '{document.original_filename}' uploaded successfully",
+                    "type": "success",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "persistent": False,
+                    "metadata": {
                         "document_id": document.id,
                         "category": document.category,
                         "file_size": document.file_size
                     }
-                )
+                }
+                self.servicebus.send_notification_message(notification_data)
                 print(f"Sent upload notification for document {document.id}")
             except Exception as e:
                 print(f"Failed to send upload notification: {e}")

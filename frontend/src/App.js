@@ -5,9 +5,11 @@ import React, { useState } from 'react';
 import './index.css';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ThemeProvider } from './ThemeContext';
+import { NotificationProvider } from './NotificationContext';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
+import NotificationComponent from './components/NotificationComponent';
 
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -71,9 +73,12 @@ const App = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <div className="App">
-          <AppContent />
-        </div>
+        <NotificationProvider>
+          <div className="App">
+            <AppContent />
+            <NotificationComponent />
+          </div>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );
