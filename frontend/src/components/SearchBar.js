@@ -68,19 +68,11 @@ const SearchBar = ({ onSearchResults, onSearchError }) => {
   };
 
   const handleToggleTips = (e) => {
-    console.log('🔥 SEARCH TIPS CLICKED! Event type:', e.type);
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('Current showTips state:', showTips);
     const newState = !showTips;
-    console.log('Setting new state to:', newState);
     setShowTips(newState);
-    
-    // Force a re-render
-    setTimeout(() => {
-      console.log('After timeout, showTips is:', showTips);
-    }, 100);
   };
 
   const handleSuggestionClick = async (suggestionText) => {

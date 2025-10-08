@@ -45,19 +45,20 @@ class DocumentWorker:
             Base.metadata.create_all(bind=engine)
             logger.info("Database tables initialized")
             
-            # Initialize Azure Service Bus
+            # Initialize Azure Service Bus (REQUIRED)
             self.servicebus = AzureServiceBusService()
             logger.info("Azure Service Bus initialized")
             
-            # Test Service Bus connection
+            # Test Service Bus connection (REQUIRED)
             connection_test = await self.servicebus.test_connection()
             if connection_test:
                 logger.info("Azure Service Bus connection test successful")
             else:
-                logger.warning("Azure Service Bus connection test failed")
+                raise RuntimeError("Azure Service Bus connection test failed - Service Bus is required for worker operation")
                 
         except Exception as e:
             logger.error(f"Failed to initialize worker: {e}")
+            logger.error("Azure Service Bus is mandatory for worker operation")
             raise
     
     async def start(self):

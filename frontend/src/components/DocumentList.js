@@ -39,7 +39,7 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
           const url = URL.createObjectURL(blob);
           newThumbnailUrls[doc.id] = url;
         } catch (error) {
-          console.log(`Failed to load thumbnail for document ${doc.id}:`, error);
+          // Failed to load thumbnail - silently continue
         }
       }
       

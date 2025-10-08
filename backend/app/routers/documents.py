@@ -140,8 +140,8 @@ async def download_document(
         print(f"Attempting to download document {document_id}: {document.original_filename}")
         print(f"File path: {document.file_path}")
         
-        # Get file content (handles both Azure and local storage)
-        file_content = document_service.get_file_content(db, document_id, current_user.id)
+        # Get file content directly from Azure Blob Storage
+        file_content = document_service.blob_service.download_file(document.file_path)
         if not file_content:
             print(f"File content not found for document {document_id}")
             raise HTTPException(
@@ -200,8 +200,8 @@ async def get_document_thumbnail(
                 detail="Thumbnail only available for image and PDF files"
             )
         
-        # Get file content
-        file_content = document_service.get_file_content(db, document_id, current_user.id)
+        # Get file content directly from Azure Blob Storage
+        file_content = document_service.blob_service.download_file(document.file_path)
         if not file_content:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

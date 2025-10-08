@@ -193,14 +193,10 @@ const Auth = ({ mode = 'login', onToggle }) => {
             </p>
             <div
               onClick={(e) => {
-                console.log('Toggle clicked!');
                 e.preventDefault();
                 e.stopPropagation();
                 if (onToggle) {
                   onToggle();
-                  console.log('onToggle executed');
-                } else {
-                  console.error('onToggle function missing');
                 }
               }}
               style={{ 
