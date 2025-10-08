@@ -1,7 +1,8 @@
 /**
  * Main App component with routing and authentication
  */
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ThemeProvider } from './ThemeContext';
@@ -11,28 +12,31 @@ import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import NotificationComponent from './components/NotificationComponent';
 
-const AppContent = () => {
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
+  const location = useLocation();
 
-  const handleGetStarted = () => {
-    setAuthMode('signup');
-    setShowAuth(true);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full spin mb-4"></div>
+        <p className="text-gray-600 dark:text-gray-400 text-lg">Loading...</p>
+      </div>
+    );
+  }
 
-  const handleSignIn = () => {
-    setAuthMode('login');
-    setShowAuth(true);
-  };
+  if (!isAuthenticated) {
+    // Redirect to login page, but save the intended destination
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
-  const handleToggleAuth = () => {
-    setAuthMode(authMode === 'login' ? 'signup' : 'login');
-  };
+  return children;
+};
 
-  const handleBackToLanding = () => {
-    setShowAuth(false);
-  };
+// Public Route component (redirects to dashboard if already authenticated)
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -44,29 +48,58 @@ const AppContent = () => {
   }
 
   if (isAuthenticated) {
-    return <Dashboard />;
+    return <Navigate to="/dashboard" replace />;
   }
 
-  if (showAuth) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="absolute top-6 left-6 z-10">
-          <button 
-            onClick={handleBackToLanding} 
-            className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Back to Home</span>
-          </button>
-        </div>
-        <Auth mode={authMode} onToggle={handleToggleAuth} />
-      </div>
-    );
-  }
+  return children;
+};
 
-  return <LandingPage onGetStarted={handleGetStarted} onSignIn={handleSignIn} />;
+const AppContent = () => {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route 
+        path="/" 
+        element={
+          <PublicRoute>
+            <LandingPage />
+          </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/login" 
+        element={
+          <PublicRoute>
+            <Auth />
+          </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/signup" 
+        element={
+          <PublicRoute>
+            <Auth />
+          </PublicRoute>
+        } 
+      />
+
+      {/* Protected routes */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+
+      {/* Catch all route - redirect to appropriate page */}
+      <Route 
+        path="*" 
+        element={<Navigate to="/" replace />} 
+      />
+    </Routes>
+  );
 };
 
 const App = () => {
@@ -74,10 +107,12 @@ const App = () => {
     <ThemeProvider>
       <AuthProvider>
         <NotificationProvider>
-          <div className="App">
-            <AppContent />
-            <NotificationComponent />
-          </div>
+          <Router>
+            <div className="App">
+              <AppContent />
+              <NotificationComponent />
+            </div>
+          </Router>
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>

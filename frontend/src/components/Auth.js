@@ -2,11 +2,18 @@
  * Authentication components for login and signup
  */
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { Eye, EyeOff, User, Mail, Lock, Loader, ArrowRight, FileText } from 'lucide-react';
 
-const Auth = ({ mode = 'login', onToggle }) => {
+const Auth = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { login, signup } = useAuth();
+  
+  // Determine mode from URL path
+  const mode = location.pathname === '/signup' ? 'signup' : 'login';
+  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -38,13 +45,12 @@ const Auth = ({ mode = 'login', onToggle }) => {
         if (!result.success) {
           setError(result.error);
         }
+        // If successful, ProtectedRoute will automatically redirect to /dashboard
       } else {
         const result = await signup(formData);
         if (result.success) {
           alert('Account created successfully! Please log in.');
-          if (onToggle && typeof onToggle === 'function') {
-            onToggle();
-          }
+          navigate('/login'); // Navigate to login page after successful signup
         } else {
           setError(result.error);
         }
@@ -53,6 +59,14 @@ const Auth = ({ mode = 'login', onToggle }) => {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleMode = () => {
+    if (mode === 'login') {
+      navigate('/signup');
+    } else {
+      navigate('/login');
     }
   };
 
@@ -198,9 +212,7 @@ const Auth = ({ mode = 'login', onToggle }) => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (onToggle) {
-                  onToggle();
-                }
+                toggleMode();
               }}
               style={{ 
                 pointerEvents: 'auto',

@@ -84,6 +84,32 @@ class DocumentUpdate(BaseModel):
     openai_keywords: Optional[List[str]] = None
 
 
+# Batch upload schemas
+class BatchUploadFileStatus(BaseModel):
+    filename: str
+    status: str  # "success", "error", "pending", "processing"
+    document_id: Optional[int] = None
+    error_message: Optional[str] = None
+    file_size: Optional[int] = None
+    category: Optional[str] = None
+
+
+class BatchUploadResponse(BaseModel):
+    total_files: int
+    successful_uploads: int
+    failed_uploads: int
+    files: List[BatchUploadFileStatus]
+    message: str
+
+
+class BatchUploadProgress(BaseModel):
+    total_files: int
+    processed_files: int
+    current_file: Optional[str] = None
+    status: str  # "processing", "completed", "error"
+    files: List[BatchUploadFileStatus]
+
+
 # Search schemas
 class SearchQuery(BaseModel):
     query: str

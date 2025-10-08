@@ -154,6 +154,55 @@
   @apply from-primary-500 to-primary-700;
 }
 
+/* Improved scrollbar for file lists and specific containers */
+.scrollable-container {
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgb(96 165 250) rgb(243 244 246) !important;
+  overflow-y: scroll !important;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+  background: rgb(243 244 246) !important;
+  border-radius: 10px !important;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: rgb(96 165 250) !important;
+  border-radius: 10px !important;
+  border: 2px solid rgb(243 244 246) !important;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+  background: rgb(59 130 246) !important;
+}
+
+.scrollable-container::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .scrollable-container {
+    scrollbar-color: rgb(96 165 250) rgb(55 65 81) !important;
+  }
+  
+  .scrollable-container::-webkit-scrollbar-track {
+    background: rgb(55 65 81) !important;
+    border-radius: 10px !important;
+  }
+  
+  .scrollable-container::-webkit-scrollbar-thumb {
+    background: rgb(96 165 250) !important;
+    border: 2px solid rgb(55 65 81) !important;
+  }
+}
+
 /* File upload drag area styles */
 .upload-area {
   @apply border-2 border-dashed border-gray-300/50 dark:border-dark-600/50 rounded-xl p-8 text-center transition-all duration-300 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm;

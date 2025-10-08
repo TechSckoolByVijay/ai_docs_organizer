@@ -2,6 +2,7 @@
  * Landing Page component for non-authenticated users
  */
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import { 
   FileText, 
@@ -20,12 +21,17 @@ import {
   Sparkles
 } from 'lucide-react';
 
-const LandingPage = ({ onGetStarted, onSignIn }) => {
+const LandingPage = () => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   
-  // Create a signup handler that sets mode to signup
-  const handleSignUp = () => {
-    onGetStarted(); // This already sets mode to 'signup'
+  // Navigation handlers
+  const handleGetStarted = () => {
+    navigate('/signup');
+  };
+
+  const handleSignIn = () => {
+    navigate('/login');
   };
   const features = [
     {
@@ -130,13 +136,13 @@ const LandingPage = ({ onGetStarted, onSignIn }) => {
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <button
-              onClick={onSignIn}
+              onClick={handleSignIn}
               className="px-6 py-3 text-indigo-600 dark:text-indigo-400 font-semibold rounded-xl hover:bg-white/80 dark:hover:bg-indigo-900/30 transition-all duration-300 hover:scale-105 backdrop-blur-sm border border-indigo-200 dark:border-indigo-700 shadow-lg hover:shadow-xl"
             >
               Sign In
             </button>
             <button
-              onClick={handleSignUp}
+              onClick={handleGetStarted}
               className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -162,7 +168,7 @@ const LandingPage = ({ onGetStarted, onSignIn }) => {
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <button
-                onClick={handleSignUp}
+                onClick={handleGetStarted}
                 className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold shadow-2xl hover:shadow-xl transform hover:scale-105 transition-all duration-300 group relative flex items-center"
               >
                 <Sparkles className="w-6 h-6 mr-3 animate-pulse" />
@@ -171,7 +177,7 @@ const LandingPage = ({ onGetStarted, onSignIn }) => {
               </button>
               
               <button
-                onClick={onSignIn}
+                onClick={handleSignIn}
                 className="text-lg px-8 py-4 border-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 rounded-xl font-semibold shadow-xl hover:shadow-2xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transform hover:scale-105 transition-all duration-300"
               >
                 Sign In to Existing Account
@@ -312,7 +318,7 @@ const LandingPage = ({ onGetStarted, onSignIn }) => {
                   </p>
                   
                   <button
-                    onClick={handleSignUp}
+                    onClick={handleGetStarted}
                     className="btn-primary w-full text-lg py-4 shadow-xl hover:shadow-2xl group"
                   >
                     <Sparkles className="w-6 h-6 mr-3 animate-pulse" />

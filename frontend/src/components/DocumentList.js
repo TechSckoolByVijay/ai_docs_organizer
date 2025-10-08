@@ -13,7 +13,6 @@ import {
   RefreshCw,
   FolderOpen,
   AlertCircle,
-  CheckCircle,
   Clock,
   File,
   Tag
@@ -58,7 +57,7 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
     return () => {
       Object.values(thumbnailUrls).forEach(url => URL.revokeObjectURL(url));
     };
-  }, [documents]);
+  }, [documents]); // Only depend on documents, not thumbnailUrls to avoid infinite loops
 
   const handleDelete = async (documentId) => {
     if (!window.confirm('Are you sure you want to delete this document?')) {
@@ -122,12 +121,12 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
   };
 
   const getFileIcon = (doc) => {
-    const filename = doc.original_filename;
-    const contentType = doc.content_type;
-    const extension = filename.toLowerCase().split('.').pop();
+    const filename = doc.original_filename || '';
+    const contentType = doc.content_type || '';
+    const extension = filename ? filename.toLowerCase().split('.').pop() : '';
     
     // Check if we have a thumbnail for this image or PDF - smaller size for better layout
-    if ((contentType?.includes('image') || contentType === 'application/pdf') && thumbnailUrls[doc.id]) {
+    if ((contentType.includes('image') || contentType === 'application/pdf') && thumbnailUrls[doc.id]) {
       return (
         <div className="w-48 h-48 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 shadow-md">
           <img 
@@ -140,7 +139,7 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
     }
     
     // Fallback to medium-sized icons for non-images/PDFs
-    if (contentType?.includes('image') || ['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+    if (contentType.includes('image') || ['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
       return <Image className="w-12 h-12 text-blue-500" />;
     }
     
@@ -263,7 +262,7 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
             )}
 
             {/* Large Thumbnail Display - moved to top for image documents and PDFs */}
-            {((doc.content_type?.includes('image') || doc.content_type === 'application/pdf') && thumbnailUrls[doc.id]) && (
+            {((doc.content_type && (doc.content_type.includes('image') || doc.content_type === 'application/pdf')) && thumbnailUrls[doc.id]) && (
               <div className="flex justify-center mb-4">
                 <div className="w-48 h-48 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 shadow-md">
                   <img 
@@ -279,7 +278,7 @@ const DocumentList = ({ documents, onDocumentDeleted, onRefresh }) => {
             <div className="flex items-start justify-between mb-3 w-full overflow-hidden">
               <div className="flex items-start space-x-3 flex-1 min-w-0">
                 {/* Only show small icon if not an image/PDF with thumbnail */}
-                {!((doc.content_type?.includes('image') || doc.content_type === 'application/pdf') && thumbnailUrls[doc.id]) && (
+                {!((doc.content_type && (doc.content_type.includes('image') || doc.content_type === 'application/pdf')) && thumbnailUrls[doc.id]) && (
                   <div className="flex-shrink-0">
                     {getFileIcon(doc)}
                   </div>

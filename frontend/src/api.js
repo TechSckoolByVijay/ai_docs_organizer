@@ -58,6 +58,10 @@ export const documentsAPI = {
     api.post('/documents/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
+  uploadBatch: (formData) => 
+    api.post('/documents/upload/batch', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
   list: (params = {}) => api.get('/documents/', { params }),
   get: (id) => api.get(`/documents/${id}`),
   delete: (id) => api.delete(`/documents/${id}`),

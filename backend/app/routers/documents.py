@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Q
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import DocumentResponse, APIResponse, CategoryResponse
+from app.schemas import DocumentResponse, APIResponse, CategoryResponse, BatchUploadResponse
 from app.services.document import DocumentService
 from app.services.category import CategoryService
 from app.services.file_processing import FileProcessingService
@@ -39,6 +39,49 @@ async def upload_document(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload document"
+        )
+
+
+@router.post("/upload/batch", response_model=BatchUploadResponse)
+async def upload_multiple_documents(
+    files: List[UploadFile] = File(...),
+    category: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Upload multiple documents at once."""
+    try:
+        # Validate that files are provided
+        if not files:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No files provided"
+            )
+        
+        # Limit number of files per batch
+        max_batch_size = 10  # Configurable limit
+        if len(files) > max_batch_size:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Maximum {max_batch_size} files allowed per batch upload"
+            )
+        
+        # Process batch upload
+        result = await document_service.upload_multiple_documents(
+            db=db,
+            user=current_user,
+            files=files,
+            category=category
+        )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload files"
         )
 
 

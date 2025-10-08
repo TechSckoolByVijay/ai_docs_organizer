@@ -8,7 +8,7 @@ from typing import List, Optional
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 from app.models import Document, User
-from app.schemas import DocumentCreate, DocumentResponse
+from app.schemas import DocumentCreate, DocumentResponse, BatchUploadResponse, BatchUploadFileStatus
 from app.services.category import CategoryService
 from app.services.file_processing import FileProcessingService
 from app.services.azure_blob import AzureBlobService
@@ -171,6 +171,72 @@ class DocumentService:
             if 'blob_path' in locals():
                 self.blob_service.delete_file(blob_path)
             raise
+    
+    async def upload_multiple_documents(
+        self,
+        db: Session,
+        user: User,
+        files: List[UploadFile],
+        category: Optional[str] = None
+    ) -> BatchUploadResponse:
+        """Upload multiple documents and return batch results."""
+        
+        total_files = len(files)
+        successful_uploads = 0
+        failed_uploads = 0
+        file_results = []
+        
+        for file in files:
+            file_status = BatchUploadFileStatus(
+                filename=file.filename or "unnamed",
+                status="pending"
+            )
+            
+            try:
+                # Use existing single upload logic
+                document_response = await self.upload_document(
+                    db=db,
+                    user=user,
+                    file=file,
+                    category=category
+                )
+                
+                # Update status for successful upload
+                file_status.status = "success"
+                file_status.document_id = document_response.id
+                file_status.file_size = document_response.file_size
+                file_status.category = document_response.category
+                successful_uploads += 1
+                
+            except HTTPException as e:
+                # Handle HTTP exceptions (validation errors, etc.)
+                file_status.status = "error"
+                file_status.error_message = e.detail
+                failed_uploads += 1
+                
+            except Exception as e:
+                # Handle unexpected errors
+                file_status.status = "error"
+                file_status.error_message = f"Unexpected error: {str(e)}"
+                failed_uploads += 1
+            
+            file_results.append(file_status)
+        
+        # Create response message
+        if failed_uploads == 0:
+            message = f"All {successful_uploads} files uploaded successfully"
+        elif successful_uploads == 0:
+            message = f"All {failed_uploads} files failed to upload"
+        else:
+            message = f"{successful_uploads} files uploaded successfully, {failed_uploads} files failed"
+        
+        return BatchUploadResponse(
+            total_files=total_files,
+            successful_uploads=successful_uploads,
+            failed_uploads=failed_uploads,
+            files=file_results,
+            message=message
+        )
     
     def get_user_documents(
         self, 
