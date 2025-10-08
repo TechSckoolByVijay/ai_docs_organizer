@@ -3,7 +3,7 @@
  */
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { Eye, EyeOff, User, Mail, Lock, Loader, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, Loader, ArrowRight, FileText } from 'lucide-react';
 
 const Auth = ({ mode = 'login', onToggle }) => {
   const { login, signup } = useAuth();
@@ -63,8 +63,11 @@ const Auth = ({ mode = 'login', onToggle }) => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-primary-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <User className="w-8 h-8 text-white" />
+              <FileText className="w-8 h-8 text-white" />
             </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+              DocOrganizer
+            </h1>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {mode === 'login' ? 'Welcome Back' : 'Create Account'}
             </h2>

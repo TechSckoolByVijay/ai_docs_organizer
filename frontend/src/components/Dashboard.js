@@ -135,7 +135,7 @@ const Dashboard = () => {
                     maxWidth: '100%'
                   }}
                 >
-                  Document Organizer
+                  DocOrganizer
                 </h1>
                 <p className="text-sm text-gray-300 dark:text-gray-400 truncate">
                   Welcome back, {user?.username}! ✨
